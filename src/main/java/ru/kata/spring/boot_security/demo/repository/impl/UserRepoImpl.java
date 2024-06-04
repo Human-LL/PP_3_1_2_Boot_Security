@@ -6,6 +6,7 @@ import ru.kata.spring.boot_security.demo.repository.UserRepo;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 import java.util.List;
@@ -47,6 +48,21 @@ public class UserRepoImpl implements UserRepo {
         getEntityManager().merge(user);
     }
 
+    @Override
+    public User getUserWithRolesById(Long userId) {
+        try {
+            return getEntityManager()
+                    .createQuery(
+                            "SELECT DISTINCT u FROM User u JOIN FETCH u.roles WHERE u.id = :userId",
+                            User.class
+                    )
+                    .setParameter("userId", userId)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            throw new EntityNotFoundException("Пользователь с id " + userId + " не найден.");
+        }
+    }
+
     // Получение пользователя по ID
     @Override
     public User getUserById(Long id) {
@@ -64,7 +80,6 @@ public class UserRepoImpl implements UserRepo {
                 .createQuery("select u from User u", User.class)
                 .getResultList();
     }
-
 
     // Получение пользователя по его имени
     @Override

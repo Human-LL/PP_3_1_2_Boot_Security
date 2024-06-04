@@ -2,9 +2,11 @@ package ru.kata.spring.boot_security.demo.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.Hibernate;
 import org.springframework.security.core.GrantedAuthority;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -30,8 +32,14 @@ public class Role implements GrantedAuthority {
     private String name;
 
     // Набор пользователей, которым назначена эта роль
-    @ManyToMany(mappedBy = "roles")
+
+    @ManyToMany(fetch = FetchType.LAZY)
     private Set<User> users;
+
+    // Method to initialize users
+    public void initializeUsers() {
+        Hibernate.initialize(getUsers());
+    }
 
     public Role(String name, String description) {
         this.name = name;
@@ -54,25 +62,23 @@ public class Role implements GrantedAuthority {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Role role = (Role) o;
-        return Objects.equals(id, role.id) &&
-                Objects.equals(name, role.name) &&
-                Objects.equals(users, role.users);
+        return Objects.equals(description, role.description) && Objects.equals(id, role.id) && Objects.equals(name, role.name) && Objects.equals(users, role.users);
     }
 
     // Переопределение метода для вычисления хеш-кода роли
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, users);
+        return Objects.hash(description, id, name, users);
     }
 
     // Переопределение метода для удобного вывода информации о роли
     @Override
     public String toString() {
         return "Role{" +
-                "id=" + id +
+                "description='" + description + '\'' +
+                ", id=" + id +
                 ", name='" + name + '\'' +
                 ", users=" + users +
                 '}';
     }
-
 }
